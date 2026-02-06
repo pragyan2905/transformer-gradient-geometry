@@ -1,142 +1,123 @@
 # Transformer Gradient Geometry Analysis
 
-This repository presents an empirical study of optimization dynamics in Transformer-based language models, with a focus on comparing **Full Fine-Tuning** and **Low-Rank Adaptation (LoRA)**. The project analyzes gradient geometry, learning rate sensitivity, optimization alignment, and layer-wise learning activity to understand how parameter-efficient fine-tuning constrains and shapes the training trajectory.
+## Overview
 
-This work is intended as a systematic experimental investigation into the mechanisms underlying LoRA and related adaptation methods.
+This repository presents an empirical study of optimization dynamics in Transformer-based language models, with a focus on understanding the geometric and statistical properties of gradients under Full Fine-Tuning and Low-Rank Adaptation (LoRA). The project investigates how parameter-efficient fine-tuning alters learning trajectories, stability, and depth-wise adaptation.
 
----
-
-## Table of Contents
-
-- Project Objectives  
-- Experimental Overview  
-- Methodology  
-- Repository Structure  
-- Installation  
-- Usage  
-- Key Findings  
-- Research Contributions  
-- Limitations  
-- Future Work  
-- Citation  
-- License  
-- Contact  
+The work provides quantitative evidence explaining the effectiveness and limitations of LoRA through controlled experiments and systematic analysis.
 
 ---
 
-## Project Objectives
+## Project Description
+
+Recent parameter-efficient fine-tuning methods such as LoRA achieve competitive performance with significantly fewer trainable parameters. However, the underlying optimization mechanisms are not yet fully understood. This project addresses this gap by analyzing gradient geometry, learning rate sensitivity, trajectory alignment, and layer-wise learning activity in Transformer models.
+
+The experiments aim to provide a mechanistic interpretation of LoRA as a constrained and stable approximation of full fine-tuning.
+
+---
+
+## Research Objectives
 
 The primary objectives of this project are:
 
-- To characterize the geometric structure of gradients during Transformer fine-tuning.
-- To analyze how learning rate affects optimization stability.
-- To compare Full Fine-Tuning and LoRA in terms of update direction, magnitude, and variance.
-- To study where learning is concentrated across model depth.
-- To provide empirical explanations for the effectiveness of LoRA.
+- **Characterize gradient behavior** during Transformer fine-tuning
+- **Analyze the effect of learning rate** on optimization stability
+- **Quantify alignment** between Full Fine-Tuning and LoRA updates
+- **Study depth-wise learning distributions** across model layers
+- **Assess the stability and variance** of parameter updates
 
 ---
 
-## Experimental Overview
+## Experimental Design
 
-The project is organized as a sequence of controlled experiments implemented in Jupyter notebooks.
+The study is organized into five sequential experiments:
 
 ### 1. Baseline Gradient Geometry
-
-**Notebook:** `01_baseline_gradient_geometry.ipynb`
-
-- Logs gradient norms and random projections.
-- Establishes baseline optimization behavior.
-- Serves as a reference for subsequent experiments.
-
----
+Establishes reference statistics for gradient norms and projections.
 
 ### 2. Learning Rate Sensitivity
-
-**Notebook:** `02_lr_sensitivity_gradient_geometry.ipynb`
-
-- Studies optimization behavior under multiple learning rates.
-- Analyzes gradient stability and dispersion.
-- Evaluates sensitivity to step size.
-
----
+Evaluates the effect of different learning rates on gradient stability.
 
 ### 3. Full Fine-Tuning vs LoRA
-
-**Notebook:** `03_lora_vs_fullft_gradient_geometry.ipynb`
-
-- Compares gradient statistics between Full FT and LoRA.
-- Measures magnitude, variance, and distribution differences.
-- Characterizes constraints induced by low-rank adaptation.
-
----
+Compares gradient magnitude and dispersion between methods.
 
 ### 4. Alignment Analysis
-
-**Notebook:** `04_alignment_check.ipynb`
-
-- Computes cosine similarity between Full FT and LoRA updates.
-- Tracks alignment dynamics across training steps.
-- Evaluates how closely LoRA approximates the full optimization trajectory.
-
----
+Measures cosine similarity between Full Fine-Tuning and LoRA updates.
 
 ### 5. Layer-wise Learning Activity
-
-**Notebook:** `05_layer_activity.ipynb`
-
-- Aggregates gradient norms by Transformer layer.
-- Analyzes depth-wise learning distribution.
-- Reports mean and variance per layer.
-- Reveals depth-selective learning patterns.
+Analyzes how learning is distributed across Transformer layers.
 
 ---
 
 ## Methodology
 
-### Model
+Experiments are conducted using the **DistilGPT-2** model within the Hugging Face Transformers framework. Two fine-tuning strategies are evaluated:
 
-- Base model: DistilGPT-2
-- Architecture: Decoder-only Transformer
-- Framework: Hugging Face Transformers
+- **Full Fine-Tuning**
+- **LoRA-based adaptation**
 
-### Fine-Tuning Methods
+Gradient statistics are logged during training and analyzed offline. Metrics include:
 
-- Full Fine-Tuning (all parameters trainable)
-- LoRA-based parameter-efficient adaptation
-
-### Metrics
-
-- Gradient L2 norms
-- Random subspace projections
-- Cosine similarity of update vectors
-- Layer-wise gradient statistics
-- Variance and stability measures
-
-### Data
-
-- Language modeling datasets (WikiText variants or synthetic batches)
-- Tokenization using pretrained tokenizers
-
-### Logging
-
-Training procedures log per-parameter gradient statistics and store them as `.pt` files for post-hoc analysis.
+- Gradient norms
+- Random projections
+- Cosine similarity
+- Layer-wise variance estimates
 
 ---
 
-## Repository Structure
+## Quantitative Results
 
-```text
-transformer-gradient-geometry/
-│
-├── notebooks/
-│   ├── 01_baseline_gradient_geometry.ipynb
-│   ├── 02_lr_sensitivity_gradient_geometry.ipynb
-│   ├── 03_lora_vs_fullft_gradient_geometry.ipynb
-│   ├── 04_alignment_check.ipynb
-│   └── 05_layer_activity.ipynb
-│
-├── logs/                 # Ignored (experiment artifacts)
-├── figures/              # Ignored (generated plots)
-├── README.md
-├── requirements.txt
-└── .gitignore
+### Learning Rate Sensitivity
+- Lower learning rates exhibit greater stability
+- Higher rates increase gradient variance
+
+### Full Fine-Tuning vs LoRA
+- **LoRA** significantly reduces gradient dispersion
+- **Full Fine-Tuning**: Mean projection ≈ 0.23 with high variance
+- **LoRA**: Mean projection ≈ 0.09 with substantially lower variance
+
+### Alignment Analysis
+- Partial trajectory alignment observed
+- Cosine similarity stabilizes in the range of **0.17 to 0.19** after early training
+
+### Layer-wise Analysis
+- **Full Fine-Tuning**: Distributes learning across all layers
+- **LoRA**: Concentrates learning in shallow and intermediate layers with lower variance
+
+---
+
+## Discussion
+
+The results indicate that LoRA constrains optimization to a low-dimensional subspace, producing implicit regularization and improved stability. Key findings:
+
+- **Reduced variance** leads to consistent convergence
+- **Depth-selective learning** explains partial misalignment with full fine-tuning trajectories
+- LoRA functions as a **constrained approximation** of full fine-tuning that preserves dominant optimization directions while limiting parameter updates
+
+---
+
+## Limitations
+
+- Experiments conducted on **small to medium-scale models**, which may limit generalization to large foundation models
+- **Limited hyperparameter exploration**
+- Only **LoRA** is analyzed in depth
+
+---
+
+## Future Work
+
+Future research directions include:
+
+- **Rank-scaling studies** to understand the impact of LoRA rank parameter
+- **Comparisons with DoRA and GaLore** for broader method evaluation
+- **Experiments on larger models** to validate findings at scale
+- **Task-specific evaluations** across diverse downstream tasks
+- **Theoretical modeling** of optimization geometry
+
+---
+
+
+
+## Contact
+
+For questions or collaboration inquiries, please open an issue or contact [your email].
